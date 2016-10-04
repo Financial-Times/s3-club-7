@@ -44,6 +44,8 @@ func Router(w http.ResponseWriter, r *http.Request) {
             resp.Body.Message = err.Error()
             resp.Body.Success = false
             resp.respond(w)
+
+            return
         }
 
         defer u.CleanUp()
@@ -52,7 +54,6 @@ func Router(w http.ResponseWriter, r *http.Request) {
             resp.Status = http.StatusInternalServerError
             resp.Body.Message = err.Error()
             resp.Body.Success = false
-            resp.respond(w)
         } else {
             resp.Body.Message = status
             resp.Body.Success = true
