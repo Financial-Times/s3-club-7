@@ -58,8 +58,6 @@ func (u *Uploader) DumpToFS () (err error) {
 
 func (u *Uploader) CleanUp() (err error) {
     _ = u.tmpFile.Close()    // Just to be safe
-    os.Remove(u.tmpFile.Name())
 
-    return
-
+    return os.Remove(u.tmpFile.Name())
 }
