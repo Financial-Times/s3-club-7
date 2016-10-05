@@ -11,7 +11,7 @@ var flexUrl string
 
 func init() {
     clusterid = *flag.String("cluster", "staging", "flex cluster to run under")
-    flexUrl = *flag.String("flex-api", "flex.example.com/api", "Flex API Url to validate creds against")
+    flexUrl = *flag.String("flex-api", "https://flex.example.com/api", "Flex API Url to validate creds against")
 
     flag.Parse()
 
