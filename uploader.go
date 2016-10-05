@@ -5,11 +5,13 @@ import (
     "fmt"
     "io"
     "io/ioutil"
+    "mime/multipart"
     "os"
 )
 
 type Uploader struct {
     Form string
+    File multipart.File
     Password string
     Project *Project
     UUID string
@@ -46,7 +48,10 @@ func (u *Uploader) DumpToFS () (err error) {
     }
     defer f.Close()
 
-    io.Copy(f, u.tmpFile)
+    _,err = io.Copy(f, u.File)
+    if err != nil {
+        return
+    }
 
     return
 }

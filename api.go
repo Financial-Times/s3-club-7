@@ -37,7 +37,7 @@ func Router(w http.ResponseWriter, r *http.Request) {
         defer uploadFile.Close()
 
         p := Project{FileName: handler.Filename, UUID: r.FormValue("uuid")}
-        u := Uploader{Username: r.FormValue("username"), Password: r.FormValue("password"), Form: r.FormValue("form"), Project: &p}
+        u := Uploader{Username: r.FormValue("username"), Password: r.FormValue("password"), Form: r.FormValue("form"), Project: &p, File: uploadFile}
 
         if err := u.DumpToFS(); err != nil {
             resp.Status = http.StatusInternalServerError
