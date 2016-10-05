@@ -12,10 +12,7 @@ import (
 type Uploader struct {
     Form string
     File multipart.File
-    Password string
     Project *Project
-    UUID string
-    Username string
 
     tmpFile *os.File
 }
