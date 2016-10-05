@@ -1,0 +1,27 @@
+<html>
+  <head>
+    <title>Simple uploader</title>
+  </head>
+
+  <body>
+    <h1>Uploader</h1>
+
+    <form enctype="multipart/form-data" action="http://127.0.0.1:8000" method="post">
+      <input type="file" name="upload" />
+      <p>uuid:
+        <input type="text" name="uuid" />
+      </p>
+
+      <p>username:
+        <input type="text" name="username" />
+      </p>
+
+      <p>password:
+        <input type="password" name="password" />
+      </p>
+      <input type="hidden" name="form" value="ingest" />
+
+      <input type="submit" value="upload" />
+    </form>
+  </body>
+</html>
