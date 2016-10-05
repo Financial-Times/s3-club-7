@@ -5,6 +5,7 @@ import (
     "fmt"
     "log"
     "net/http"
+    "time"
 )
 
 type Response struct {
@@ -23,6 +24,7 @@ func Router(w http.ResponseWriter, r *http.Request) {
 
     var resp Response
     resp.Status = http.StatusOK
+    resp.Time = time.Now().Format(time.RFC3339)
     resp.Body.Success = true
 
     switch {
