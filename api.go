@@ -31,7 +31,7 @@ func Router(w http.ResponseWriter, r *http.Request) {
     case r.Method == "POST" && r.URL.Path == "/":
         r.ParseMultipartForm(32 << 20)
 
-        a := Auth{Username: r.FormValue("username"), Password: r.FormValue("password"), URL: flexUrl}
+        a := Auth{Username: r.FormValue("username"), Password: r.FormValue("password"), URL: *flexUrl}
         if err := a.Valid(); err != nil {
             resp.Status = http.StatusUnauthorized
             resp.Body.Message = err.Error()

@@ -29,7 +29,7 @@ func (u *Uploader) BucketName() (b string, err error) {
         return
     }
 
-    b = fmt.Sprintf("mio-%s-%s", bucketItem, clusterid)
+    b = fmt.Sprintf("mio-%s-%s", bucketItem, *clusterid)
     return
 }
 
