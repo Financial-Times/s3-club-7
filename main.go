@@ -6,22 +6,23 @@ import (
     "net/http"
 )
 
-var clusterid string
-var flexUrl string
+var clusterid *string
+var flexUrl *string
 
 func init() {
-    clusterid = *flag.String("cluster", "staging", "flex cluster to run under")
-    flexUrl = *flag.String("flex-api", "flex.example.com/api", "Flex API Url to validate creds against")
+    clusterid = flag.String("cluster", "", "flex cluster to run under")
+    flexUrl = flag.String("flex-api", "https://flex.example.com/api", "Flex API Url to validate creds against")
 
     flag.Parse()
 
-    if clusterid == "" {
+    if *clusterid == "" {
         log.Fatal("No flex cluster defined, please specify on the cli")
     }
 }
 
 func main() {
-    log.Printf( "Creating projects under the %s cluster", clusterid )
+    log.Printf( "Creating projects under the %s cluster", *clusterid )
+    log.Printf( "Authenticating against %s", *flexUrl )
     log.Printf( "Listening on port %d", 8000)
 
     http.HandleFunc("/", Router)

@@ -12,10 +12,7 @@ import (
 type Uploader struct {
     Form string
     File multipart.File
-    Password string
     Project *Project
-    UUID string
-    Username string
 
     tmpFile *os.File
 }
@@ -32,7 +29,7 @@ func (u *Uploader) BucketName() (b string, err error) {
         return
     }
 
-    b = fmt.Sprintf("mio-%s-%s", bucketItem, clusterid)
+    b = fmt.Sprintf("mio-%s-%s", bucketItem, *clusterid)
     return
 }
 

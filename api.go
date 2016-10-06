@@ -5,6 +5,7 @@ import (
     "fmt"
     "log"
     "net/http"
+    "time"
 )
 
 type Response struct {
@@ -23,11 +24,22 @@ func Router(w http.ResponseWriter, r *http.Request) {
 
     var resp Response
     resp.Status = http.StatusOK
+    resp.Time = time.Now().Format(time.RFC3339)
     resp.Body.Success = true
 
     switch {
     case r.Method == "POST" && r.URL.Path == "/":
         r.ParseMultipartForm(32 << 20)
+
+        a := Auth{Username: r.FormValue("username"), Password: r.FormValue("password"), URL: *flexUrl}
+        if err := a.Valid(); err != nil {
+            resp.Status = http.StatusUnauthorized
+            resp.Body.Message = err.Error()
+            resp.Body.Success = false
+
+            resp.respond(w)
+            return
+        }
 
         uploadFile, handler, err := r.FormFile("upload")
         if err != nil {
@@ -37,14 +49,14 @@ func Router(w http.ResponseWriter, r *http.Request) {
         defer uploadFile.Close()
 
         p := Project{FileName: handler.Filename, UUID: r.FormValue("uuid")}
-        u := Uploader{Username: r.FormValue("username"), Password: r.FormValue("password"), Form: r.FormValue("form"), Project: &p, File: uploadFile}
+        u := Uploader{Form: r.FormValue("form"), Project: &p, File: uploadFile}
 
         if err := u.DumpToFS(); err != nil {
             resp.Status = http.StatusInternalServerError
             resp.Body.Message = err.Error()
             resp.Body.Success = false
-            resp.respond(w)
 
+            resp.respond(w)
             return
         }
 
@@ -69,6 +81,7 @@ func Router(w http.ResponseWriter, r *http.Request) {
     }
 
     resp.respond(w)
+    return
 }
 
 func LogRequest(r *http.Request) {
