@@ -8,7 +8,7 @@ CONTAINER_TAG=quay.io/financialtimes/s3-club-7:latest
 all: main
 
 main:
-	$(GOENV) go build $(GOARGS)
+	$(GOENV) GOOS=$(GOOS) go build $(GOARGS)
 
 install: all
 	install -d $(BINDIR)
