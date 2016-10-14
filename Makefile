@@ -1,5 +1,6 @@
 GOARGS=-a -installsuffix cgo -x
 GOENV=CGO_ENABLED=0
+GOOS=linux
 BINDIR=/usr/local/sbin
 EXECUTABLE=s3-club-7
 CONTAINER_TAG=quay.io/financialtimes/s3-club-7:latest
