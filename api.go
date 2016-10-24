@@ -135,6 +135,7 @@ func setLogin()(c *http.Cookie) {
             Name:  "s3-club-7",
             Value: encoded,
             Path:  "/",
+            Secure: true,
         }
     }
 
