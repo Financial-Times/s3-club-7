@@ -68,7 +68,14 @@ func Router(w http.ResponseWriter, r *http.Request) {
 
 
     case r.Method == "POST" && r.URL.Path == "/upload":
-        r.ParseMultipartForm(32 << 20)
+        if !loggedIn {
+            resp.Status = http.StatusUnauthorized
+            resp.Body.Message = "not logged in"
+            resp.Body.Success = false
+
+            resp.respond(w)
+            return
+        }
 
         uploadFile, handler, err := r.FormFile("upload")
         if err != nil {
