@@ -5,10 +5,12 @@ import (
     "fmt"
     "log"
     "net/http"
+    "net/url"
     "time"
 )
 
 type Response struct {
+    Referer string
     Time string
     Status int
     Body ResponseBody
@@ -26,6 +28,12 @@ func Router(w http.ResponseWriter, r *http.Request) {
     resp.Status = http.StatusOK
     resp.Time = time.Now().Format(time.RFC3339)
     resp.Body.Success = true
+
+    if r.Referer() == ""{
+        resp.Referer = "null"
+    } else {
+        resp.Referer = refererDomain(r.Referer())
+    }
 
     r.ParseMultipartForm(32 << 20)
 
@@ -112,9 +120,10 @@ func LogRequest(r *http.Request) {
 }
 
 func (r Response) respond (w http.ResponseWriter) {
-    w.Header().Set("Access-Control-Allow-Headers", "requested-with, Content-Type, origin, authorization, accept, client-security-token, cache-control, x-api-key")
+    w.Header().Set("Access-Control-Allow-Credentials", "true")
+    w.Header().Set("Access-Control-Allow-Headers", "requested-with, Content-Type, origin, authorization, accept, client-security-token, cache-control, Set-Cookie, Cookie")
     w.Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT")
-    w.Header().Set("Access-Control-Allow-Origin", "*")
+    w.Header().Set("Access-Control-Allow-Origin", r.Referer)
     w.Header().Set("Access-Control-Max-Age", "10000")
     w.Header().Set("Cache-Control", "no-cache")
 
@@ -153,5 +162,14 @@ func isLoggedIn(r *http.Request)(bool) {
         }
     }
 
-    return false
+    return
+}
+
+func refererDomain(s string)(domain string) {
+    var u *url.URL
+    if u, err = url.Parse(s); err != nil {
+        return s
+    }
+
+    return fmt.Sprintf("%s://%s", u.Scheme, u.Host)
 }
