@@ -22,7 +22,8 @@ type ResponseBody struct {
 }
 
 func Router(w http.ResponseWriter, r *http.Request) {
-    LogRequest(r)
+    loggedIn, username := isLoggedIn(r)
+    LogRequest(r, username)
 
     var resp Response
     resp.Status = http.StatusOK
@@ -49,14 +50,15 @@ func Router(w http.ResponseWriter, r *http.Request) {
             resp.Body.Success = false
 
             resp.respond(w)
+            return
         } else {
-            http.SetCookie(w, setLogin())
+            http.SetCookie(w, setLogin(a.Username))
             resp.Body.Message = "logged in"
         }
 
 
     case r.Method == "GET" && r.URL.Path == "/session":
-        if isLoggedIn(r) {
+        if loggedIn {
             resp.Body.Message = "logged in"
         } else {
             resp.Status = http.StatusUnauthorized
@@ -112,8 +114,9 @@ func Router(w http.ResponseWriter, r *http.Request) {
     return
 }
 
-func LogRequest(r *http.Request) {
-    log.Printf( "%s :: %s %s",
+func LogRequest(r *http.Request, username string) {
+    log.Printf( "%s@%s :: %s %s",
+        username,
         r.RemoteAddr,
         r.Method,
         r.URL.Path)
@@ -135,29 +138,32 @@ func (r Response) respond (w http.ResponseWriter) {
     fmt.Fprintf(w, string(j))
 }
 
-func setLogin()(c *http.Cookie) {
+func setLogin(username string)(c *http.Cookie) {
     value := map[string]string{
         "loggedin": "true",
+        "username": username,
     }
     if encoded, err := CookieStore.Encode("s3-club-7", value); err == nil {
         c = &http.Cookie{
             Name:  "s3-club-7",
             Value: encoded,
             Path:  "/",
-            Secure: true,
+            Secure: !*development,
         }
+    } else {
+        log.Println(err)
     }
 
-    return c
+    return
 }
 
-func isLoggedIn(r *http.Request)(bool) {
+func isLoggedIn(r *http.Request)(loggedIn bool, username string) {
     if cookie, err := r.Cookie("s3-club-7"); err == nil {
         value := make(map[string]string)
 
         if err = CookieStore.Decode("s3-club-7", cookie.Value, &value); err == nil {
             if value["loggedin"] == "true" {
-                return true
+                return true, value["username"]
             }
         }
     }
