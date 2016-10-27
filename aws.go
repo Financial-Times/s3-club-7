@@ -15,6 +15,11 @@ var output *s3.PutObjectOutput
 var err error
 
 func (u *Uploader)UploadData()(out string, e error) {
+    if *development {
+        out = "upload to s3 is disabled in development mode"
+        return
+    }
+
     if projectData, err = ioutil.ReadFile(u.tmpFile.Name()); err != nil {
         e = err
         return
