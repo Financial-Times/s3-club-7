@@ -13,11 +13,14 @@ var clusterid *string
 var flexUrl *string
 var hashKey []byte
 
+var development *bool
+
 var CookieStore *securecookie.SecureCookie
 
 func init() {
     clusterid = flag.String("cluster", "", "flex cluster to run under")
     flexUrl = flag.String("flex-api", "https://flex.example.com/api", "Flex API Url to validate creds against")
+    development = flag.Bool("dev", false, "When running in dev mode we disable things like secure cookies")
 
     blockKeyString := flag.String("block-key", "", "AES Key to encrypt secure cookie with. 32 bytes suggested")
     hashKeyString := flag.String("hmac-key", "", "HMAC-specific key. 64 bytes suggested")
@@ -51,6 +54,10 @@ func main() {
     log.Printf( "Creating projects under the %s cluster", *clusterid )
     log.Printf( "Authenticating against %s", *flexUrl )
     log.Printf( "Listening on port %d", 8000)
+
+    if *development {
+        log.Print("**IN DEV MODE**")
+    }
 
     http.HandleFunc("/", Router)
     http.ListenAndServe(":8000", nil)

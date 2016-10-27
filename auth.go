@@ -13,6 +13,10 @@ type Auth struct {
 }
 
 func (a *Auth) Valid() error {
+    if *development {
+        return nil
+    }
+
     var req *http.Request
     var resp *http.Response
     var err error
