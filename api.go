@@ -21,6 +21,12 @@ type ResponseBody struct {
     Message string
 }
 
+const (
+    cookieAge = 43200
+    cookieName = "s3-club-7"
+)
+
+
 func Router(w http.ResponseWriter, r *http.Request) {
     loggedIn, username := isLoggedIn(r)
     LogRequest(r, username)
@@ -150,12 +156,13 @@ func setLogin(username string)(c *http.Cookie) {
         "loggedin": "true",
         "username": username,
     }
-    if encoded, err := CookieStore.Encode("s3-club-7", value); err == nil {
+    if encoded, err := CookieStore.Encode(cookieName, value); err == nil {
         c = &http.Cookie{
-            Name:  "s3-club-7",
-            Value: encoded,
+            MaxAge: cookieAge,
+            Name:  cookieName,
             Path:  "/",
             Secure: !*development,
+            Value: encoded,
         }
     } else {
         log.Println(err)
@@ -165,10 +172,10 @@ func setLogin(username string)(c *http.Cookie) {
 }
 
 func isLoggedIn(r *http.Request)(loggedIn bool, username string) {
-    if cookie, err := r.Cookie("s3-club-7"); err == nil {
+    if cookie, err := r.Cookie(cookieName); err == nil {
         value := make(map[string]string)
 
-        if err = CookieStore.Decode("s3-club-7", cookie.Value, &value); err == nil {
+        if err = CookieStore.Decode(cookieName, cookie.Value, &value); err == nil {
             if value["loggedin"] == "true" {
                 return true, value["username"]
             }
