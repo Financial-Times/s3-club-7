@@ -20,6 +20,9 @@ go get -u github.com/gorilla/securecookie
 ## Build
 ```make dist```
 
+## Running
+```docker run quay.io/financialtimes/s3-club-7 -cluster={clustername} -flex-api=https://master-flex-{clustername}.ft.com/api```
+
 Licence
 --
 
