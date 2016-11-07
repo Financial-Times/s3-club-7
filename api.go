@@ -6,6 +6,7 @@ import (
     "log"
     "net/http"
     "net/url"
+    "strconv"
     "time"
 )
 
@@ -58,7 +59,7 @@ func Router(w http.ResponseWriter, r *http.Request) {
             resp.respond(w)
             return
         } else {
-            http.SetCookie(w, setLogin(a.Username))
+            http.SetCookie(w, setLogin(a.Username, true))
             resp.Body.Message = "logged in"
         }
 
@@ -72,6 +73,9 @@ func Router(w http.ResponseWriter, r *http.Request) {
             resp.Body.Success = false
         }
 
+    case r.Method == "DELETE" && r.URL.Path == "/session":
+        http.SetCookie(w, setLogin("", false))
+        resp.Body.Message = "logged out"
 
     case r.Method == "POST" && r.URL.Path == "/upload":
         if !loggedIn {
@@ -82,6 +86,7 @@ func Router(w http.ResponseWriter, r *http.Request) {
             resp.respond(w)
             return
         }
+
 
         uploadFile, handler, err := r.FormFile("upload")
         if err != nil {
@@ -151,9 +156,9 @@ func (r Response) respond (w http.ResponseWriter) {
     fmt.Fprintf(w, string(j))
 }
 
-func setLogin(username string)(c *http.Cookie) {
+func setLogin(username string, loggedin bool)(c *http.Cookie) {
     value := map[string]string{
-        "loggedin": "true",
+        "loggedin": strconv.FormatBool(loggedin),
         "username": username,
     }
     if encoded, err := CookieStore.Encode(cookieName, value); err == nil {
