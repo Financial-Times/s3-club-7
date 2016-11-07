@@ -5,10 +5,12 @@ import (
     "fmt"
     "log"
     "net/http"
+    "net/url"
     "time"
 )
 
 type Response struct {
+    Referer string
     Time string
     Status int
     Body ResponseBody
@@ -19,13 +21,26 @@ type ResponseBody struct {
     Message string
 }
 
+const (
+    cookieAge = 43200
+    cookieName = "s3-club-7"
+)
+
+
 func Router(w http.ResponseWriter, r *http.Request) {
-    LogRequest(r)
+    loggedIn, username := isLoggedIn(r)
+    LogRequest(r, username)
 
     var resp Response
     resp.Status = http.StatusOK
     resp.Time = time.Now().Format(time.RFC3339)
     resp.Body.Success = true
+
+    if r.Referer() == ""{
+        resp.Referer = "null"
+    } else {
+        resp.Referer = refererDomain(r.Referer())
+    }
 
     r.ParseMultipartForm(32 << 20)
 
@@ -41,14 +56,15 @@ func Router(w http.ResponseWriter, r *http.Request) {
             resp.Body.Success = false
 
             resp.respond(w)
+            return
         } else {
-            http.SetCookie(w, setLogin())
+            http.SetCookie(w, setLogin(a.Username))
             resp.Body.Message = "logged in"
         }
 
 
     case r.Method == "GET" && r.URL.Path == "/session":
-        if isLoggedIn(r) {
+        if loggedIn {
             resp.Body.Message = "logged in"
         } else {
             resp.Status = http.StatusUnauthorized
@@ -58,7 +74,14 @@ func Router(w http.ResponseWriter, r *http.Request) {
 
 
     case r.Method == "POST" && r.URL.Path == "/upload":
-        r.ParseMultipartForm(32 << 20)
+        if !loggedIn {
+            resp.Status = http.StatusUnauthorized
+            resp.Body.Message = "not logged in"
+            resp.Body.Success = false
+
+            resp.respond(w)
+            return
+        }
 
         uploadFile, handler, err := r.FormFile("upload")
         if err != nil {
@@ -104,17 +127,19 @@ func Router(w http.ResponseWriter, r *http.Request) {
     return
 }
 
-func LogRequest(r *http.Request) {
-    log.Printf( "%s :: %s %s",
+func LogRequest(r *http.Request, username string) {
+    log.Printf( "%s@%s :: %s %s",
+        username,
         r.RemoteAddr,
         r.Method,
         r.URL.Path)
 }
 
 func (r Response) respond (w http.ResponseWriter) {
-    w.Header().Set("Access-Control-Allow-Headers", "requested-with, Content-Type, origin, authorization, accept, client-security-token, cache-control, x-api-key")
+    w.Header().Set("Access-Control-Allow-Credentials", "true")
+    w.Header().Set("Access-Control-Allow-Headers", "requested-with, Content-Type, origin, authorization, accept, client-security-token, cache-control, Set-Cookie, Cookie")
     w.Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT")
-    w.Header().Set("Access-Control-Allow-Origin", "*")
+    w.Header().Set("Access-Control-Allow-Origin", r.Referer)
     w.Header().Set("Access-Control-Max-Age", "10000")
     w.Header().Set("Cache-Control", "no-cache")
 
@@ -126,32 +151,45 @@ func (r Response) respond (w http.ResponseWriter) {
     fmt.Fprintf(w, string(j))
 }
 
-func setLogin()(c *http.Cookie) {
+func setLogin(username string)(c *http.Cookie) {
     value := map[string]string{
         "loggedin": "true",
+        "username": username,
     }
-    if encoded, err := CookieStore.Encode("s3-club-7", value); err == nil {
+    if encoded, err := CookieStore.Encode(cookieName, value); err == nil {
         c = &http.Cookie{
-            Name:  "s3-club-7",
-            Value: encoded,
+            MaxAge: cookieAge,
+            Name:  cookieName,
             Path:  "/",
-            Secure: true,
+            Secure: !*development,
+            Value: encoded,
         }
+    } else {
+        log.Println(err)
     }
 
-    return c
+    return
 }
 
-func isLoggedIn(r *http.Request)(bool) {
-    if cookie, err := r.Cookie("s3-club-7"); err == nil {
+func isLoggedIn(r *http.Request)(loggedIn bool, username string) {
+    if cookie, err := r.Cookie(cookieName); err == nil {
         value := make(map[string]string)
 
-        if err = CookieStore.Decode("s3-club-7", cookie.Value, &value); err == nil {
+        if err = CookieStore.Decode(cookieName, cookie.Value, &value); err == nil {
             if value["loggedin"] == "true" {
-                return true
+                return true, value["username"]
             }
         }
     }
 
-    return false
+    return
+}
+
+func refererDomain(s string)(domain string) {
+    var u *url.URL
+    if u, err = url.Parse(s); err != nil {
+        return s
+    }
+
+    return fmt.Sprintf("%s://%s", u.Scheme, u.Host)
 }
