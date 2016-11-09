@@ -143,7 +143,7 @@ func LogRequest(r *http.Request, username string) {
 func (r Response) respond (w http.ResponseWriter) {
     w.Header().Set("Access-Control-Allow-Credentials", "true")
     w.Header().Set("Access-Control-Allow-Headers", "requested-with, Content-Type, origin, authorization, accept, client-security-token, cache-control, Set-Cookie, Cookie")
-    w.Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT")
+    w.Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT, DELETE")
     w.Header().Set("Access-Control-Allow-Origin", r.Referer)
     w.Header().Set("Access-Control-Max-Age", "10000")
     w.Header().Set("Cache-Control", "no-cache")
