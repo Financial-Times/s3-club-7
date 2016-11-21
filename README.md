@@ -5,6 +5,24 @@ Given a set of valid FT credentials, as recognised by Flex, accept a file upload
 
 This service replaces the kenny-logins project.
 
+# Building
+
+## Install dependencies
+
+```
+go get -u github.com/aws/aws-sdk-go
+go get -u github.com/gorilla/securecookie
+```
+
+## Login into quay
+```docker login -e="." -u="financialtimes+ftrobot" -p="XXX" quay.io```
+
+## Build
+```make dist```
+
+## Running
+```docker run quay.io/financialtimes/s3-club-7 -cluster={clustername} -flex-api=https://master-flex-{clustername}.ft.com/api```
+
 Licence
 --
 
