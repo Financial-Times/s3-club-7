@@ -8,6 +8,7 @@ import (
     "net/url"
     "strconv"
     "time"
+    "os"
 )
 
 type Response struct {
@@ -121,6 +122,53 @@ func Router(w http.ResponseWriter, r *http.Request) {
             log.Printf("Error cleaning up: %s", err.Error())
         }
 
+    case r.Method == "GET" && r.URL.Path == "/project":
+
+        if !loggedIn {
+            resp.Status = http.StatusUnauthorized
+            resp.Body.Message = "not logged in"
+            resp.Body.Success = false
+
+            resp.respond(w)
+            return
+        }
+
+        uuid := r.URL.Query().Get("uuid")
+        path := r.URL.Query().Get("path")
+        mode := r.URL.Query().Get("mode")
+
+        if uuid == "" || path == "" || mode == "" {
+            http.Error(w, "uuid, path and mode parameters not specified", 400)
+            return
+        }
+
+        d := Downloader{uuid, path, mode}
+
+        if fileName, numBytes, error := d.DownloadProject(); error != nil {
+            resp.Status = http.StatusInternalServerError
+            resp.Body.Message = "failed to download"
+            resp.Body.Success = false
+
+            resp.respond(w)
+        } else {
+            if downloadFileName, error := d.Filename(); error != nil {
+                resp.Status = http.StatusInternalServerError
+                resp.Body.Message = "failed to get filename for download"
+                resp.Body.Success = false
+            } else {
+
+                contentDisp := fmt.Sprintf("attachment; filename=%s", downloadFileName)
+                w.Header().Set("Content-Disposition", contentDisp)
+                w.Header().Set("Content-Type", "application/octet-stream")
+                w.Header().Set("Content-Length", strconv.FormatInt(numBytes, 10))
+
+                http.ServeFile(w, r, fileName)
+
+                os.Remove(fileName)
+
+                return
+            }
+        }
 
     default:
         resp.Status = http.StatusNotFound

@@ -23,6 +23,8 @@ go get -u github.com/gorilla/securecookie
 ## Running
 ```docker run quay.io/financialtimes/s3-club-7 -cluster={clustername} -flex-api=https://master-flex-{clustername}.ft.com/api```
 
+
+
 Licence
 --
 
